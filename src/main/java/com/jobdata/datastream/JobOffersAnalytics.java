@@ -7,6 +7,7 @@ import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.KStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -24,8 +25,9 @@ public class JobOffersAnalytics {
 
     @Autowired
     void processIncomingJobs(StreamsBuilder streamsBuilder) {
-        streamsBuilder.stream(jobsTopic, Consumed.with(STRING_SERDE, JOB_SERDE))
-                .foreach((k,v) -> System.out.printf("%s=%s,%s",v.getClass(), v.getJobName(), v.getDescription()));
+        KStream<String, JobOffer> jobsStream = streamsBuilder.stream(jobsTopic, Consumed.with(STRING_SERDE, JOB_SERDE));
+        jobsStream.foreach((k,v) -> System.out.printf("%s=%s,%s",v.getClass(), v.getJobName(), v.getDescription()));
+        jobsStream.to("output-topic");
         //TODO add writing to database whole jobs
         //TODO add writing to database technologies grouped by amount of offers (I think in separate method)
     }
